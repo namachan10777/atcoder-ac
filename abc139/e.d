@@ -4,51 +4,48 @@ import std.algorithm;
 import std.conv;
 import std.typecons;
 import std.range;
-
-Tuple!(int, int) nml(Tuple!(int, int) tp) {
-	return tuple(min(tp[0], tp[1]), max(tp[0], tp[1]));
-}
-
-Tuple!(int, int, bool) nml2(Tuple!(int, int, bool) tp) {
-	return tuple(min(tp[0], tp[1]), max(tp[0], tp[1]), tp[2]);
-}
+import std.container;
 
 void main() {
-	int n;
+	int n, day=1, cnt;
 	scanf("%d\n", &n);
 	int[][] as = new int[][n];
-	Tuple!(int, int)[][int] map;
-	bool[Tuple!(int, int)] memo;
-	Tuple!(int, int, bool)[][Tuple!(int, int)] graph;
-	foreach (i; 0..n) {
-		as[i] = readln.chomp.split.map!(s => s.to!int-1).array;
+	int[] ds = new int[n];
+	foreach(i; 0..n) {
+		as[i] = readln.chomp.split.map!(a => a.to!int - 1).array;
 	}
-	foreach(i; 0..n-1) {
-		foreach(j; 0..n) {
-			auto node = tuple(j, as[j][i]).nml;
-			if (node in memo) continue;
-			Tuple!(int, int)[] keys;
-			if (j in map) keys ~= map[j];
-			if (as[j][i] in map) keys ~= map[as[j][i]];
-			bool dup;
-			foreach (key; keys) {
-				if (key == node) continue;
-				graph[key] ~= tuple(node[0], node[1], false);
-			}
-			map[j] ~= node;
-			map[as[j][i]] ~= node;
-			memo[node] = true;
+	auto q = DList!(Tuple!(int, int)).init;
+	foreach(i, line; as) {
+		q.insertBack(tuple(i.to!int, line[0]));
+	}
+	q.insertBack(tuple(-1, -1));
+	for(;;) {
+		auto x = q.front[0];
+		auto y = q.front[1];
+		q.removeFront;
+		if (x < 0 && y < 0) {
+			if (q.empty) break;
+			++day;
+			q.insertBack(tuple(-1, -1));
+			continue;
 		}
+		if (as[x].empty || as[y].empty || as[x].front != y || as[y].front != x) continue;
+		if (ds[x] == day || ds[y] == day) {
+			q.insertBack(tuple(x, y));
+			continue;
+		}
+		as[x].popFront;
+		as[y].popFront;
+		if (!as[x].empty) q.insertBack(tuple(x, as[x].front));
+		if (!as[y].empty) q.insertBack(tuple(y, as[y].front));
+		ds[x] = day;
+		ds[y] = day;
+		++cnt;
 	}
-	foreach(key; graph.keys) {
-		writeln(key, " -> ", graph[key]);
-		/*while (key in graph) {
-			if (graph[key][2]) {
-				write(-1);
-				return;
-			}
-			graph[key][2] = true;
-			key = tuple(graph[key][0], graph[key][1]);
-		}*/
+	if (cnt == n*(n-1)/2) {
+		day.write;
+	}
+	else {
+		write(-1);
 	}
 }
