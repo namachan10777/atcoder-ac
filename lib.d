@@ -1,19 +1,25 @@
-// めぐる式二分探索テンプレ
-// https://qiita.com/drken/items/97e37dd6143e33a64c8c
+import std;
 
-bool isOk(long[] arr, size_t idx, long key) {
-	if (arr[idx] >= key) return true;
-	return false;
-}
-
-size_t binsearch(long[] arr, int key) {
+long lower_bound(alias F)(size_t len) {
 	long left = -1;
-	long right = arr.length;
-
-	while(right - left > 1) {
+	long right = len;
+	while (right - left > 1) {
 		long mid = left + (right - left) / 2;
-		if (isOk(arr, mid, key)) right = mid;
+		bool succ = F(mid);
+		if (succ) right = mid;
 		else left = mid;
 	}
 	return right;
+}
+
+long upper_bound(alias F)(size_t len) {
+	return lower_bound!(idx => !F(idx))(len);
+}
+
+void main() {
+	auto arr = 10.iota;
+	assert(lower_bound!(idx => arr[idx] > 4)(arr.length) == 5);
+	assert(lower_bound!(idx => arr[idx] > -1)(arr.length) == 0);
+	assert(upper_bound!(idx => arr[idx] < 4)(arr.length) == 4);
+	assert(upper_bound!(idx => arr[idx] < 10)(arr.length) == 10);
 }
